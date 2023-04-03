@@ -4,10 +4,8 @@ from messenger import Messenger; monkey.patch_all()
 from flask import Flask, Response, render_template, request
 from gevent.pywsgi import WSGIServer
 import json
-import time
 
 app = Flask(__name__)
-counter = 100
 
 def format_sse(data: str, event=None) -> str:
     _data = json.dumps(data)
