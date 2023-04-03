@@ -1,17 +1,17 @@
 async function onSend() {
   let data = document.getElementById("messageInput");
 
-  let message = data.value;
+  let message = data.value || "";
 
-  const response = await fetch("http://example.com/movies.json", {
+  const response = fetch("/newmessage", {
     method: "POST",
-
+    headers: {
+      "Content-Type": "application/json"
+    },
     body: JSON.stringify({ message })
   });
 
-  const jsonData = await response.json();
-
-  console.log(jsonData);
+  return response.then(() => (data.value = ""));
 }
 
 let eventSource = new EventSource("/listen");
@@ -30,21 +30,8 @@ eventSource.addEventListener(
     node.appendChild(textnode);
 
     document.getElementById("messageWindow").appendChild(node);
-    document.getElementById("messageWindow").scrollTop = document.getElementById("messageWindow").scrollHeight;
+    document.getElementById("messageWindow").scrollTop =
+      document.getElementById("messageWindow").scrollHeight;
   },
   false
-);
-
-eventSource.addEventListener(
-  "online",
-  function (e) {
-    console.log(e, "online");
-
-    let data = JSON.parse(e.data);
-
-    document.querySelector("#counter").innerText = data.counter;
-
-    document.querySelector("body").style.backgroundColor = data.color;
-  },
-  true
 );

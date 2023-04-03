@@ -1,11 +1,30 @@
-from gevent import monkey; monkey.patch_all()
-from flask import Flask, Response, render_template, stream_with_context
+from gevent import monkey
+
+from messenger import Messenger; monkey.patch_all()
+from flask import Flask, Response, render_template, request
 from gevent.pywsgi import WSGIServer
 import json
 import time
 
 app = Flask(__name__)
 counter = 100
+
+def format_sse(data: str, event=None) -> str:
+    _data = json.dumps(data)
+    msg = f'data: {_data}\n\n'
+    if event is not None:
+        msg = f'event: {event}\n{msg}'
+    return msg
+
+messenger = Messenger()
+
+
+@app.route('/newmessage', methods = ['POST'])
+def ping():
+    print(request.get_json())
+    msg = format_sse(data=request.get_json(), event='message')
+    messenger.publish(msg=msg)
+    return {}, 200
 
 @app.route("/")
 def render_index():
@@ -14,16 +33,13 @@ def render_index():
 @app.route("/listen")
 def listen():
 
-  def respond_to_client():
-    while True:
-      global counter
-      print(counter)
-      counter += 1
-      _data = json.dumps({"message":counter,})
-      yield f"id: 1\ndata: {_data}\nevent: message\n\n"
-      time.sleep(0.5)
-  return Response(respond_to_client(), mimetype='text/event-stream')
-  
+  def stream():
+        messages = messenger.listen()  # returns a queue.Queue
+        while True:
+            msg = messages.get()  # blocks until a new message arrives
+            yield msg
+
+  return Response(stream(), mimetype='text/event-stream')
 
 if __name__ == "__main__":
   app.run(port=80, debug=True)
