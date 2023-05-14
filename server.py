@@ -40,8 +40,8 @@ def listen():
   return Response(stream(), mimetype='text/event-stream')
 
 if __name__ == "__main__":
-  app.run(port=80, debug=True)
-  http_server = WSGIServer(("localhost", 80), app)
+  app.run(host="0.0.0.0",port=3000, debug=True)
+  http_server = WSGIServer(("localhost", 3000), app)
   http_server.serve_forever()
 
 
